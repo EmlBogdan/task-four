@@ -1,0 +1,9 @@
+---
+- name: Deploy nginx site
+  ansible.builtin.template:
+    src: static-site-config.conf
+    dest: /etc/nginx/conf.d/{{ server_name }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload Nginx

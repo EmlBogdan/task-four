@@ -1,0 +1,31 @@
+---
+- name: Get ssl cert
+  ansible.builtin.command: 
+    openssl req -newkey rsa:2048 -nodes   -keyout /home/ec2-user/server.key.pem -x509 -days 3650 -out /home/ec2-user/server.crt.pem -subj "/CN=98.93.113.163"
+  args: 
+    creates: /home/ec2-user/server.crt.pem
+
+- name: Change cert permissions
+  ansible.builtin.file:
+    path: /home/ec2-user/server.key.pem
+    mode: '0755'
+
+- name: Run keycloak proxy container
+  community.docker.docker_container:
+    name: keycloak
+    image: quay.io/keycloak/keycloak
+    command: ["start-dev", "--import-realm"]
+    env:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "{{ keycloak_admin_password }}"
+      KC_HTTP_ENABLED: "true"
+      KC_DB: dev-mem
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/conf/server.crt.pem 
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/conf/server.key.pem
+    volumes:
+      - /home/ec2-user/server.crt.pem:/opt/keycloak/conf/server.crt.pem
+      - /home/ec2-user/server.key.pem:/opt/keycloak/conf/server.key.pem
+      - .keycloak/realm-export:/opt/keycloak/data/import
+    ports:
+      - 8080:8080
+      - 8443:8443

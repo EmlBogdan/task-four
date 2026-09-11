@@ -1,0 +1,22 @@
+---
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /var/www
+    state: directory
+    mode: '0755'
+
+- name: Copy html file with owner and permissions
+  ansible.builtin.copy:
+    src: index.html
+    dest: /var/www/index.html
+    owner: "{{ user }}"
+    group: root 
+    mode: '0644'
+
+- name: Copy emails file with owner and permissions
+  ansible.builtin.copy:
+    src: auth-emails
+    dest: /home/ec2-user/auth-emails
+    owner: "{{ user }}"
+    group: root
+    mode: '0644'
